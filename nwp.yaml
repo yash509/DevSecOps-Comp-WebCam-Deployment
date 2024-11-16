@@ -1,11 +1,11 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
-  name: pe-wa-network-policy
+  name: wbcm-webapp-network-policy
 spec:
   podSelector:
     matchLabels:
-      app: pe-wa
+      app: wbcm-webapp
   policyTypes:
   - Ingress
   - Egress
@@ -13,9 +13,9 @@ spec:
   - from:
     - podSelector:
         matchLabels:
-          app: pe-wa
+          app: wbcm-webapp
   egress:
   - to:
     - podSelector:
         matchLabels:
-          app: pe-wa
+          app: wbcm-webapp
