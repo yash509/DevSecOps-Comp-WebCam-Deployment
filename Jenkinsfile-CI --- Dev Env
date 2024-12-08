@@ -1,9 +1,11 @@
 pipeline {
     agent any
+
     tools {
         jdk 'jdk17'
         nodejs 'node16'
     }
+
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
         AWS_ACCOUNT_ID="992382397067"
@@ -12,6 +14,7 @@ pipeline {
         IMAGE_TAG="v1"
         REPOSITORY_URI = "992382397067.dkr.ecr.ap-south-1.amazonaws.com/webapp-image"
     }
+
     stages {
         stage('clean workspace') {
             steps {
