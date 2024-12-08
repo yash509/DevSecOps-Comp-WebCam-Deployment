@@ -1,5 +1,6 @@
 pipeline {
     agent any
+	
     tools {
         jdk 'jdk17'
         nodejs 'node16'
@@ -15,6 +16,11 @@ pipeline {
         IMAGE_NAME = "yash5090/wbcm-webapp"
         TAG = "${params.DOCKER_TAG}" 
         SCANNER_HOME = tool 'sonar-scanner'
+	AWS_ACCOUNT_ID="992382397067"
+        AWS_DEFAULT_REGION="ap-south-1"
+        IMAGE_REPO_NAME="webapp-image"
+        IMAGE_TAG="v1"
+        REPOSITORY_URI = "992382397067.dkr.ecr.ap-south-1.amazonaws.com/webapp-image"
     }
     
     stages {
@@ -34,6 +40,15 @@ pipeline {
                 sh 'docker --version'
                 sh 'ansible --version'
                 sh 'snyk --version'
+            }
+        }
+
+	stage('Docker Authentication with ECR') {
+            steps {
+                script {
+                sh """aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com"""
+                }
+                 
             }
         }
         
@@ -163,7 +178,15 @@ pipeline {
                    sh 'snyk code test --json-file-output=vuln1.json > snykloadedvulnerabilityreport.txt || true '
                 }   
             }
-        } 
+        }
+
+	stage('ECR Deployment Artifact Creation') {
+            steps{
+                script {
+                    dockerImage = docker.build "${IMAGE_REPO_NAME}:${IMAGE_TAG}"
+                }
+            }
+        }
         
         stage("Docker Image Building"){
             steps{
@@ -204,6 +227,15 @@ pipeline {
                             sh "docker push ${IMAGE_NAME}:${TAG}"
                         //}
                     }
+                }
+            }
+        }
+
+	stage('Publishing Docker Image to Container Registry') {
+            steps{  
+                script {
+                    sh """docker tag ${IMAGE_REPO_NAME}:${IMAGE_TAG} ${REPOSITORY_URI}:$IMAGE_TAG"""
+                    sh """docker push ${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/${IMAGE_REPO_NAME}:${IMAGE_TAG}"""
                 }
             }
         }
